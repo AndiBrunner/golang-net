@@ -40,6 +40,14 @@ const (
 	maxControlFramePayloadLength = 125
 )
 
+// StatusError represents WebSocket custom errors.
+type HandshakeError struct {
+	*ProtocolError
+	StatusCode int
+	ResponseHeader http.Header
+}
+func (err *HandshakeError) Error() string { return err.ErrorString }
+
 var (
 	ErrBadMaskingKey         = &ProtocolError{"bad masking key"}
 	ErrBadPongMessage        = &ProtocolError{"bad pong message"}
@@ -422,8 +430,9 @@ func hybiClientHandshake(config *Config, br *bufio.Reader, bw *bufio.Writer) (er
 	if err != nil {
 		return err
 	}
+
 	if resp.StatusCode != 101 {
-		return ErrBadStatus
+		return &HandshakeError{ErrBadStatus,resp.StatusCode,resp.Header}
 	}
 	if strings.ToLower(resp.Header.Get("Upgrade")) != "websocket" ||
 		strings.ToLower(resp.Header.Get("Connection")) != "upgrade" {
