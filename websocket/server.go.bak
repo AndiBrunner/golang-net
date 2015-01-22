@@ -11,7 +11,7 @@ import (
 	"net/http"
 )
 
-func newServerConn(rwc io.ReadWriteCloser, buf *bufio.ReadWriter, req *http.Request, config *Config, handshake func(*Config, *http.Request) error, serviceToken *string) (conn *Conn, err error) {
+func newServerConn(rwc io.ReadWriteCloser, buf *bufio.ReadWriter, req *http.Request, config *Config, handshake func(*Config, *http.Request) error) (conn *Conn, err error) {
 	var hs serverHandshaker = &hybiServerHandshaker{Config: config}
 	code, err := hs.ReadHandshake(buf.Reader, req)
 	if err == ErrBadWebSocketVersion {
@@ -39,7 +39,7 @@ func newServerConn(rwc io.ReadWriteCloser, buf *bufio.ReadWriter, req *http.Requ
 			return
 		}
 	}
-	err = hs.AcceptHandshake(buf.Writer, serviceToken)
+	err = hs.AcceptHandshake(buf.Writer)
 	if err != nil {
 		code = http.StatusBadRequest
 		fmt.Fprintf(buf, "HTTP/1.1 %03d %s\r\n", code, http.StatusText(code))
@@ -82,7 +82,7 @@ func (s Server) serveWebSocket(w http.ResponseWriter, req *http.Request) {
 	// the client did not send a handshake that matches with protocol
 	// specification.
 	defer rwc.Close()
-	conn, err := newServerConn(rwc, buf, req, &s.Config, s.Handshake, &s.ServiceToken)
+	conn, err := newServerConn(rwc, buf, req, &s.Config, s.Handshake)
 	if err != nil {
 		return
 	}

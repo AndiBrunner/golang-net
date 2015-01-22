@@ -535,7 +535,7 @@ func Origin(config *Config, req *http.Request) (*url.URL, error) {
 	return url.ParseRequestURI(origin)
 }
 
-func (c *hybiServerHandshaker) AcceptHandshake(buf *bufio.Writer, serviceToken *string) (err error) {
+func (c *hybiServerHandshaker) AcceptHandshake(buf *bufio.Writer) (err error) {
 	if len(c.Protocol) > 0 {
 		if len(c.Protocol) != 1 {
 			// You need choose a Protocol in Handshake func in Server.
@@ -557,7 +557,7 @@ func (c *hybiServerHandshaker) AcceptHandshake(buf *bufio.Writer, serviceToken *
 		}
 	}
 	
-	buf.WriteString("Service-Token: " + *serviceToken + "\r\n")
+	buf.WriteString("Service-Token: " + c.Header.Get("Service-Token") + "\r\n")
 	buf.WriteString("\r\n")
 	return buf.Flush()
 }
